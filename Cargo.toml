@@ -1,0 +1,16 @@
+[package]
+name = "deft-cli"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Deft command line tool"
+
+[dependencies]
+clap = { version = "4.5.37", features = ["derive"] }
+inquire = "0.7.5"
+regex = "1.11.1"
+rust-embed="8.7.0"
+
+[[bin]]
+name = "deft"
+path = "src/main.rs"
