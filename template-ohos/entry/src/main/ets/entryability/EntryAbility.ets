@@ -7,7 +7,7 @@ const DOMAIN = 0x0000;
 
 export default class EntryAbility extends RustAbility {
 
-  public moduleName: string = "mobile_demo";
+  public moduleName: string = "deftapp";
 
   async onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): Promise<void> {
     super.onCreate(want, launchParam);

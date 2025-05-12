@@ -5,6 +5,9 @@ use inquire::Text;
 use inquire::validator::{ErrorMessage, Validation};
 use regex::Regex;
 use rust_embed::{Embed, RustEmbed};
+use serde_json::{Map, Value};
+
+const DEFT_CONFIG_FILE: &str = "deft.config.json";
 
 #[derive(Embed)]
 #[folder = "template-android"]
@@ -83,6 +86,38 @@ fn init_ohos() {
     dist::<OhosAsset>(&dst);
 
     replace(&dst.join("AppScope/app.json5"), "fun.kason.deftapp", &app_id);
+    if let Err(error) =  write_app_id("ohos", &app_id) {
+        eprintln!("{}", error);
+    }
+}
+
+
+fn write_app_id(platform: &str, app_id: &str) -> Result<(), String> {
+    let mut config = load_deft_config()?;
+    let root = config.as_object_mut().ok_or("Invalid config found")?;
+    let ohos = root.entry(platform)
+        .or_insert(Value::Object(Map::new()))
+        .as_object_mut().ok_or("Invalid config found")?;
+    ohos.insert("appId".to_string(), Value::String(app_id.to_string()));
+    save_deft_config(config)
+}
+
+fn save_deft_config(value: Value) -> Result<(), String> {
+    let content = serde_json::to_string_pretty(&value)
+        .map_err(|e| e.to_string())?;
+    fs::write(&DEFT_CONFIG_FILE, content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn load_deft_config() -> Result<Value, String> {
+    let mut config_content = "{}".to_string();
+    let exists = fs::exists(&DEFT_CONFIG_FILE).map_err(|e| e.to_string())?;
+    if exists {
+        config_content = fs::read_to_string(DEFT_CONFIG_FILE)
+            .map_err(|e| format!("{:?}", e))?;
+    }
+    let v: serde_json::Result<Value> = serde_json::from_str(&config_content);
+    v.map_err(|e| format!("{:?}", e))
 }
 
 fn init_android() {
@@ -94,6 +129,10 @@ fn init_android() {
     let app_id = inquire_app_id();
     dist::<AndroidAsset>(&dst);
     replace(&dst.join("app/build.gradle"), "fun.kason.deft_demo", &app_id);
+
+    if let Err(error) =  write_app_id("android", &app_id) {
+        eprintln!("{}", error);
+    }
 }
 
 fn dist<E: RustEmbed>(out_dir: &Path) {
