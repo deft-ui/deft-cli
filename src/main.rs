@@ -1,4 +1,5 @@
-use std::fs;
+use std::{fs, io};
+use std::fs::{File};
 use std::path::{Path, PathBuf};
 use clap::{Args, Parser, Subcommand};
 use inquire::Text;
@@ -133,6 +134,20 @@ fn init_android() {
     if let Err(error) =  write_app_id("android", &app_id) {
         eprintln!("{}", error);
     }
+    #[cfg(unix)]
+    if let Err(error) = fix_exec_permission("android/gradlew") {
+        eprintln!("{}", error);
+    }
+}
+
+#[cfg(unix)]
+fn fix_exec_permission(file: &str) -> io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    let file = File::open(file)?;
+    let mut permissions = file.metadata()?.permissions();
+    permissions.set_mode(0o744);
+    file.set_permissions(permissions)?;
+    Ok(())
 }
 
 fn dist<E: RustEmbed>(out_dir: &Path) {
