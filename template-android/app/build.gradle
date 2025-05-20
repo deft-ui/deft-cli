@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "fun.kason.deft_demo"
-        minSdk 30
+        minSdk 23
         targetSdk 34
         versionCode 1
         versionName "1.0"
